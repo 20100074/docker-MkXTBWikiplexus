@@ -10,12 +10,12 @@ LABEL maintainer="reishoku <reishoku@mail.reishoku.net>" \
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN sed -i -e 's/archive.ubuntu/ja.archive.ubuntu/g' /etc/apt/sources.list
-RUN apt-get update && apt-get install -y build-essential mecab libmecab-dev mecab-ipadic kakasi libkakasi2-dev libxml2-dev liblzma-dev g++ make wget curl nkf
+RUN apt-get update && apt-get install -y lbzip2 build-essential mecab libmecab-dev mecab-ipadic kakasi libkakasi2-dev libxml2-dev liblzma-dev g++ make wget curl nkf
 RUN cd /usr/src && wget https://ftp.jaist.ac.jp/pub/GNU/libiconv/libiconv-1.14.tar.gz -O - | tar zxvf - && cd libiconv-1.14 && sed -i -e "s/^_GL_WARN_ON_USE/\/\/_GL_WARN_ON_USE/g" srclib/stdio.in.h && ./configure && make && make install && echo "/usr/local/lib" | tee --append /etc/ld.so.conf && ldconfig
 RUN cd && wget https://github.com/yvt/xtbook/releases/download/v0.2.6/MkXTBWikiplexus-R3.tar.gz -O - | tar zxvf - && cd MkXTBWikiplexus/build.unix && sed -i -e '252 s/gets(buf)/scanf("%s",buf)!=EOF/' ../MkImageComplex/main.cpp && make
 
 ENV PATH /root/MkXTBWikiplexus/build.unix:$PATH
-RUN cd && wget "https://dumps.wikimedia.org/jawiki/latest/jawiki-latest-pages-articles.xml.bz2" && echo "Extracting..." && bunzip2 -d jawiki-latest-pages-articles.xml.bz2
+RUN cd && wget "https://dumps.wikimedia.org/jawiki/latest/jawiki-latest-pages-articles.xml.bz2" && echo "Extracting..." && lbzip2 -n $(nproc) -d jawiki-latest-pages-articles.xml.bz2
 RUN cd && mkdir -p BUILD.jawiki && cd BUILD.jawiki && MkXTBWikiplexus-bin -o jawiki-latest.xtbdict < ../jawiki-latest-pages-articles.xml && cd jawiki-latest.xtbdict && YomiGenesis-bin < BaseNames.csv > Yomi.txt && MkXTBIndexDB-bin -o Search Yomi.txt
 RUN cd ~/BUILD.jawiki/jawiki-latest.xtbdict && MkRax-bin -o Articles.db.rax < Articles.db
 RUN { \
